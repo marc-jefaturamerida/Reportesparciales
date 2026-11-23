@@ -105,7 +105,7 @@
 
     <section class="panel" aria-labelledby="title-upload">
       <div class="panel-head"><h2 id="title-upload">1. Cargar reporte XLS</h2><span class="chip">Sin conexión · Sin servidor</span></div>
-      <p class="sub">Se utilizará solo el último archivo cargado. Se leen las columnas «Agente», «Hora Entrada», «Ventas» y «Total».</p>
+      <p class="sub">Se utilizará solo el último archivo cargado. Se leen las columnas «Agente», «Hora Entrada», «Ventas» y «Total». El reporte visual agrega la columna «Tiempo trabajado» calculada al momento del corte.</p>
       <input class="file-input" id="fileInput" type="file" accept=".xls,.html,.htm,text/html,application/vnd.ms-excel" aria-label="Seleccionar archivo XLS">
       <label for="fileInput" class="drop" id="dropZone" tabindex="-1">
         <strong>Seleccionar archivo XLS</strong>
@@ -131,7 +131,7 @@
       <div class="panel-head"><h2 id="title-image">3. Imagen tipo hoja de cálculo</h2><span class="chip" id="sheetCut">Corte automático</span></div>
       <p class="sub">Cada fila usa la <strong>hora de entrada individual</strong>. La meta de trámites es de 2 por hora proporcional al tiempo transcurrido y redondeada al entero más cercano; la de entregadas cuenta bloques completos de 3 horas. En amarillo se destacan los ejecutivos con 0 trámites.</p>
       <div id="sheetViewport" class="sheet-frame" aria-label="Vista previa desplazable de la hoja de cálculo">
-        <canvas id="sheetCanvas" role="img" aria-label="Tabla con trámites y entregadas actuales, esperados y diferencias por ejecutivo"></canvas>
+        <canvas id="sheetCanvas" role="img" aria-label="Tabla con hora de entrada, tiempo trabajado, trámites y entregadas actuales, esperados y diferencias por ejecutivo"></canvas>
       </div>
       <p class="tiny-note">En celular puedes desplazar la tabla horizontalmente para leer las columnas. El JPEG se descarga completo en alta resolución.</p>
       <div class="image-actions">
@@ -287,7 +287,8 @@
         }
       }
       const averageRegs=validHours?roundTarget(rawExpected/validHours):null;
-      return {selected,actualRegs,actualSales,expectedRegs,salesExpected,averageRegs,validHours};
+      const averageHours=validHours?rawExpected/(2*validHours):null;
+      return {selected,actualRegs,actualSales,expectedRegs,salesExpected,averageRegs,validHours,averageHours};
     }
     function buildReport(now){
       const s=collective(now);
@@ -310,7 +311,7 @@
       return lines.join('\n');
     }
     // Render JPEG local, con aspecto de captura de Excel/Sheets y datos calculados por fila.
-    const layout={gutter:56,widths:[320,234,148,174,116,148,174,116],header1:64,header2:63,row:56,total:64,scale:2};
+    const layout={gutter:56,widths:[320,200,178,138,170,116,138,170,116],header1:64,header2:63,row:56,total:64,scale:2};
     const totalSheetWidth=layout.gutter+layout.widths.reduce((a,b)=>a+b,0);
     let latestSheetRows=[];
     let sheetBusy=false;
@@ -320,7 +321,7 @@
       return includedAgents().map(a=>{
         const m=metrics(a,now),tg=m.expected===null?null:roundTarget(m.expected);
         const vg=m.salesGoal;
-        return {name:txt(a.alias)||shortFirst(a.name),entry:a.entryRaw,regs:a.tramites,regGoal:tg,regDif:tg===null?null:a.tramites-tg,sales:a.entregadas,salesGoal:vg,salesDif:vg===null?null:a.entregadas-vg,zero:a.tramites===0};
+        return {name:txt(a.alias)||shortFirst(a.name),entry:a.entryRaw,worked:hoursText(m.hours),regs:a.tramites,regGoal:tg,regDif:tg===null?null:a.tramites-tg,sales:a.entregadas,salesGoal:vg,salesDif:vg===null?null:a.entregadas-vg,zero:a.tramites===0};
       });
     }
     function drawSheet(now){
@@ -354,15 +355,15 @@
       }
       let y=0;
       rowNum(1,y,layout.header1);
-      for(const [a,b,title] of [[0,2,'Detalle del Ejecutivo'],[2,5,'Trámites'],[5,8,'Ventas']]){
+      for(const [a,b,title] of [[0,3,'Detalle del Ejecutivo'],[3,6,'Trámites'],[6,9,'Ventas']]){
         const x=xs[a],width=xs[b]-xs[a];
         paintCell(x,y,width,layout.header1,'#dedede','#1e1e1e',2.15);
         print(title,x,y,width,layout.header1,'center','bold 29px Arial');
       }
       y+=layout.header1;
       rowNum(2,y,layout.header2);
-      const titles=['Agente','Hora Entrada','Actual','Esperado','Dif','Actual','Esperado','Dif'];
-      for(let i=0;i<8;i++){
+      const titles=['Agente','Hora Entrada','Tiempo trabajado','Actual','Esperado','Dif','Actual','Esperado','Dif'];
+      for(let i=0;i<9;i++){
         paintCell(xs[i],y,layout.widths[i],layout.header2,'#e9e9e9','#222',1.9);
         print(titles[i],xs[i],y,layout.widths[i],layout.header2,i===0?'left':'center','bold 23px Arial');
       }
@@ -374,12 +375,12 @@
         return value>0?'#087544':value<0?'#ba2934':'#bb8700';
       }
       for(let r=0;r<rows.length;r++){
-        const a=rows[r],vals=[a.name,a.entry,a.regs,a.regGoal,a.regDif,a.sales,a.salesGoal,a.salesDif];
+        const a=rows[r],vals=[a.name,a.entry,a.worked,a.regs,a.regGoal,a.regDif,a.sales,a.salesGoal,a.salesDif];
         rowNum(r+3,y,layout.row);
-        for(let i=0;i<8;i++){
+        for(let i=0;i<9;i++){
           paintCell(xs[i],y,layout.widths[i],layout.row,a.zero?'#fff0a6':'#fff','#2b2b2b',1.6);
           const v=vals[i]===null?'—':vals[i];
-          const isDifference=i===4||i===7;
+          const isDifference=i===5||i===8;
           print(v,xs[i],y,layout.widths[i],layout.row,
             i===0?'left':'center',isDifference?'bold 26px Arial':i===0?'bold 23px Arial':'23px Arial',
             isDifference?differenceColor(vals[i]):'#111');
@@ -387,10 +388,10 @@
         y+=layout.row;
       }
       rowNum(rows.length+3,y,layout.total);
-      const totals=['JEFATURA',`Corte ${timeLabel(now)}`,s.actualRegs,s.expectedRegs,s.actualRegs-s.expectedRegs,s.actualSales,s.salesExpected,s.actualSales-s.salesExpected];
-      for(let i=0;i<8;i++){
+      const totals=['JEFATURA',`Corte ${timeLabel(now)}`,s.averageHours===null?'—':hoursText(s.averageHours),s.actualRegs,s.expectedRegs,s.actualRegs-s.expectedRegs,s.actualSales,s.salesExpected,s.actualSales-s.salesExpected];
+      for(let i=0;i<9;i++){
         paintCell(xs[i],y,layout.widths[i],layout.total,'#ededed','#1c1c1c',2);
-        const isDifference=i===4||i===7;
+        const isDifference=i===5||i===8;
         print(totals[i],xs[i],y,layout.widths[i],layout.total,i===0?'left':'center',
           isDifference?'bold 29px Arial':i===0?'bold 24px Arial':'bold 26px Arial',
           isDifference?differenceColor(totals[i]):'#111');
