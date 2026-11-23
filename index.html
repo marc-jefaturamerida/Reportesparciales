@@ -91,7 +91,33 @@
     .image-actions button{flex:1;min-width:155px}
     .tiny-note{font-size:12px;color:var(--muted);margin:10px 0 0}
     @media(max-width:650px){.hero{padding:20px}.panel{padding:15px}.agents{grid-template-columns:1fr}.people{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:11px}.stat b{font-size:23px}.container{padding:12px 12px 108px}.sticky button{min-width:0;flex:1}.sticky .summary{max-width:48%}.drop{padding:23px 10px}}
-    @media(prefers-reduced-motion:reduce){.drop{transition:none}}
+
+    /* Organización personalizable de secciones */
+    .hero-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+    .hero-btn{background:#fff;color:#003b7a;border:1px solid #fff;font-size:13px;padding:10px 14px}
+    .hero-btn:hover:not(:disabled){background:#ebf3ff;color:#003b7a}
+    .hero-btn.outline{background:#ffffff17;color:#fff;border:1px solid #ffffff99}
+    .hero-btn.outline:hover:not(:disabled){background:#ffffff33;color:#fff}
+    .section-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;flex:1;min-width:190px}
+    .section-title-row h2{min-width:0}
+    .collapse-toggle{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;padding:6px 9px;border:1px solid #cedfee;background:#eef4fc;color:#164779;border-radius:8px;font-size:12px;font-weight:750}
+    .collapse-toggle:hover:not(:disabled){background:#dfeaf9;color:#164779}
+    .collapse-toggle .chevron{font-size:11px;display:inline-block;transition:transform .15s}
+    .panel[data-collapsed="true"] .collapse-toggle .chevron{transform:rotate(-90deg)}
+    .panel[data-collapsed="true"] .panel-head{margin-bottom:0}
+    .section-body{min-width:0}
+    .settings-panel{border-color:#aac6e3;background:#fcfdff}
+    .settings-tip{font-size:13px;color:var(--muted);margin:0 0 15px}
+    .settings-list{display:flex;flex-direction:column;gap:8px}
+    .settings-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--borde);border-radius:10px;background:white}
+    .settings-row-name{font-size:13px;font-weight:720;line-height:1.3}
+    .settings-order-actions{display:flex;gap:6px;flex-shrink:0}
+    .settings-order-actions button{min-width:40px;min-height:38px;padding:7px 11px;font-size:17px;line-height:1}
+    .settings-list-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}
+    .settings-list-actions button{padding:9px 11px;font-size:12px}
+    .settings-notice{margin:10px 0 0;font-size:12px;color:var(--muted)}
+    @media(max-width:650px){.settings-row{padding:9px}.settings-row-name{font-size:12px}.panel-head{align-items:center}.section-title-row{min-width:0}.section-title-row h2{font-size:15px}.collapse-toggle{font-size:11px}}
+    @media(prefers-reduced-motion:reduce){.drop,.collapse-toggle .chevron{transition:none}}
   </style>
 </head>
 <body>
@@ -101,10 +127,29 @@
       <h1>Reporte visual de avance</h1>
       <p>Convierte el XLS en una imagen JPEG tipo hoja de cálculo, con metas individuales, diferencias y alerta de cero trámites.</p>
       <div class="goals"><span class="goal">2 trámites por hora</span><span class="goal">1 entregada cada 3 horas completas</span></div>
+      <div class="hero-actions">
+        <button type="button" class="hero-btn" id="quickUploadBtn">Cargar XLS</button>
+        <button type="button" class="hero-btn outline" id="settingsBtn" aria-controls="settingsSection" aria-expanded="false">⚙ Ajustes</button>
+      </div>
     </header>
 
-    <section class="panel" aria-labelledby="title-upload">
-      <div class="panel-head"><h2 id="title-upload">1. Cargar reporte XLS</h2><span class="chip">Sin conexión · Sin servidor</span></div>
+
+    <section class="panel settings-panel" id="settingsSection" aria-labelledby="settingsTitle" hidden>
+      <div class="panel-head"><h2 id="settingsTitle">Ajustes · Organización</h2><button type="button" class="secondary" id="closeSettingsBtn">Cerrar</button></div>
+      <p class="settings-tip">Cambia el orden de las secciones con las flechas. Puedes contraer o expandir cada sección desde el botón que aparece junto a su título.</p>
+      <div class="settings-list" id="sectionOrderList" aria-label="Orden de las secciones"></div>
+      <div class="settings-list-actions">
+        <button type="button" class="secondary" id="expandAllBtn">Expandir todas</button>
+        <button type="button" class="secondary" id="collapseAllBtn">Contraer todas</button>
+        <button type="button" class="secondary" id="resetLayoutBtn">Restablecer organización</button>
+      </div>
+      <p class="settings-notice" id="settingsSaveStatus" role="status">El orden y los estados se guardan en este navegador, cuando el almacenamiento está disponible.</p>
+    </section>
+
+    <div id="sectionsContainer" aria-label="Secciones del reporte">
+    <section class="panel" id="uploadSection" aria-labelledby="title-upload">
+      <div class="panel-head"><div class="section-title-row"><h2 id="title-upload">1. Cargar reporte XLS</h2><button type="button" class="collapse-toggle" data-toggle-section="uploadSection" aria-controls="body-uploadSection" aria-expanded="false"><span class="chevron" aria-hidden="true">▾</span><span class="toggle-label">Expandir</span></button></div><span class="chip">Sin conexión · Sin servidor</span></div>
+      <div class="section-body" id="body-uploadSection" hidden>
       <p class="sub">Se utilizará solo el último archivo cargado. Se leen las columnas «Agente», «Hora Entrada», «Ventas» y «Total». El reporte visual agrega la columna «Tiempo trabajado» calculada al momento del corte.</p>
       <input class="file-input" id="fileInput" type="file" accept=".xls,.html,.htm,text/html,application/vnd.ms-excel" aria-label="Seleccionar archivo XLS">
       <label for="fileInput" class="drop" id="dropZone" tabindex="-1">
@@ -118,17 +163,21 @@
       <div id="errorBox" class="alert error" role="alert" hidden></div>
       <div id="warningBox" class="alert warning" role="status" hidden></div>
       <div id="successBox" class="alert success" role="status" hidden></div>
+      </div>
     </section>
 
     <section class="panel" id="selectionSection" aria-labelledby="title-selection" hidden>
-      <div class="panel-head"><h2 id="title-selection">2. Ejecutivos incluidos</h2><span class="chip" id="selectionCount">0 incluidos</span></div>
+      <div class="panel-head"><div class="section-title-row"><h2 id="title-selection">2. Ejecutivos incluidos</h2><button type="button" class="collapse-toggle" data-toggle-section="selectionSection" aria-controls="body-selectionSection" aria-expanded="false"><span class="chevron" aria-hidden="true">▾</span><span class="toggle-label">Expandir</span></button></div><span class="chip" id="selectionCount">0 incluidos</span></div>
+      <div class="section-body" id="body-selectionSection" hidden>
       <p class="sub">Todos aparecen marcados al cargar cada XLS. Desmarca un ejecutivo para excluirlo de los cálculos, del texto y de la imagen JPEG. Puedes ajustar el nombre corto que aparecerá en WhatsApp.</p>
       <div class="selection-toolbar"><span class="chip" id="selectionGoal">Metas calculadas solo para los incluidos</span><div class="buttons"><button type="button" class="secondary" id="selectAllBtn">Marcar todos</button><button type="button" class="secondary" id="clearAllBtn">Quitar todos</button></div></div>
       <div id="peopleList" class="people"></div>
+      </div>
     </section>
 
     <section class="panel" id="imageSection" aria-labelledby="title-image" hidden>
-      <div class="panel-head"><h2 id="title-image">3. Imagen tipo hoja de cálculo</h2><span class="chip" id="sheetCut">Corte automático</span></div>
+      <div class="panel-head"><div class="section-title-row"><h2 id="title-image">3. Imagen tipo hoja de cálculo</h2><button type="button" class="collapse-toggle" data-toggle-section="imageSection" aria-controls="body-imageSection" aria-expanded="false"><span class="chevron" aria-hidden="true">▾</span><span class="toggle-label">Expandir</span></button></div><span class="chip" id="sheetCut">Corte automático</span></div>
+      <div class="section-body" id="body-imageSection" hidden>
       <p class="sub">Cada fila usa la <strong>hora de entrada individual</strong>. La meta de trámites es de 2 por hora proporcional al tiempo transcurrido y redondeada al entero más cercano; la de entregadas cuenta bloques completos de 3 horas. En amarillo se destacan los ejecutivos con 0 trámites.</p>
       <div id="sheetViewport" class="sheet-frame" aria-label="Vista previa desplazable de la hoja de cálculo">
         <canvas id="sheetCanvas" role="img" aria-label="Tabla con hora de entrada, tiempo trabajado, trámites y entregadas actuales, esperados y diferencias por ejecutivo"></canvas>
@@ -141,18 +190,24 @@
         <button id="fitBtn" type="button" class="secondary">Ajustar a pantalla</button>
       </div>
       <div id="imageStatus" class="sub" role="status" aria-live="polite" style="margin:10px 0 0"></div>
+      </div>
     </section>
 
     <section class="panel" id="previewSection" aria-labelledby="title-preview" hidden>
-      <div class="panel-head"><h2 id="title-preview">4. Vista previa del texto</h2><span class="chip">Listo para WhatsApp</span></div>
+      <div class="panel-head"><div class="section-title-row"><h2 id="title-preview">4. Vista previa del texto</h2><button type="button" class="collapse-toggle" data-toggle-section="previewSection" aria-controls="body-previewSection" aria-expanded="false"><span class="chevron" aria-hidden="true">▾</span><span class="toggle-label">Expandir</span></button></div><span class="chip">Listo para WhatsApp</span></div>
+      <div class="section-body" id="body-previewSection" hidden>
       <p class="preview-label">Resumen de Jefatura, conteo individual y ejecutivos sin trámites. Solo incluye a quienes estén marcados; las metas se recalculan con el reloj del dispositivo.</p>
       <textarea class="preview" id="reportPreview" readonly spellcheck="false" aria-label="Vista previa del reporte"></textarea>
       <div class="buttons"><button id="copyBtn" type="button">Copiar reporte</button><button id="selectBtn" type="button" class="secondary">Seleccionar texto</button></div>
       <div id="copyStatus" class="sub" aria-live="polite" style="margin:10px 0 0"></div>
+      </div>
     </section>
 
-    <section class="panel" id="resultSection" aria-labelledby="title-results" hidden>
-      <div class="panel-head"><h2 id="title-results">5. Resumen de jefatura y detalle</h2><span class="chip" id="updatedChip">Actualizado</span></div>
+    <section class="panel" id="resultSection" aria-labelledby="title-results">
+      <div class="panel-head"><div class="section-title-row"><h2 id="title-results">5. Resumen de jefatura y detalle</h2><button type="button" class="collapse-toggle" data-toggle-section="resultSection" aria-controls="body-resultSection" aria-expanded="true"><span class="chevron" aria-hidden="true">▾</span><span class="toggle-label">Contraer</span></button></div><span class="chip" id="updatedChip">Actualizado</span></div>
+      <div class="section-body" id="body-resultSection">
+        <p class="empty" id="resultsPlaceholder">Carga un XLS desde el botón superior para ver aquí el resumen de Jefatura.</p>
+        <div id="resultsData" hidden>
       <p class="sub">Solo participan los ejecutivos seleccionados. Trámites esperados: 2 por hora proporcional al tiempo transcurrido, redondeado por ejecutivo. Ventas esperadas: una por cada 3 horas completas de cada ejecutivo. Totales: suma de las metas individuales.</p>
       <div class="stats" aria-label="Resumen total">
         <div class="stat"><b id="totalAgents">0</b><span>Ejecutivos incluidos</span><small id="averageGoal">Meta media: —</small></div>
@@ -160,7 +215,11 @@
         <div class="stat"><b id="totalEntregadas">0</b><span>Vent · Entregadas (Total)</span><small id="expectedEntregadas">Esperadas: 0</small></div>
       </div>
       <div id="agentGroups"></div>
+      </div>
+        </div>
     </section>
+
+    </div>
 
     <p class="footer">Archivo independiente. Los datos del XLS se procesan solo en este dispositivo y no se envían a ningún servidor.</p>
   </main>
@@ -197,6 +256,104 @@
       if(value !== undefined) e.textContent = value;
       return e;
     };
+
+    // Preferencias de presentación: nunca guarda el contenido del XLS ni modifica los cálculos.
+    const sectionDefs=[
+      {id:'uploadSection',label:'1. Cargar reporte XLS'},
+      {id:'selectionSection',label:'2. Ejecutivos incluidos'},
+      {id:'imageSection',label:'3. Imagen tipo hoja de cálculo'},
+      {id:'previewSection',label:'4. Vista previa del texto'},
+      {id:'resultSection',label:'5. Resumen de jefatura y detalle'}
+    ];
+    const defaultSectionOrder=sectionDefs.map(s=>s.id);
+    const defaultExpanded=Object.fromEntries(sectionDefs.map(s=>[s.id,s.id==='resultSection']));
+    const settingsStorageKey='marc-reporte-xls-secciones-v34';
+    function loadLayoutPrefs(){
+      try{
+        const saved=JSON.parse(localStorage.getItem(settingsStorageKey)||'null');
+        if(!saved||!Array.isArray(saved.order))throw new Error('Sin preferencias previas');
+        const order=saved.order.filter(id=>defaultSectionOrder.includes(id));
+        if(new Set(order).size!==defaultSectionOrder.length)throw new Error('Orden incompleto');
+        return {order,expanded:{...defaultExpanded,...Object.fromEntries(Object.entries(saved.expanded||{}).filter(([id,v])=>defaultSectionOrder.includes(id)&&typeof v==='boolean'))}};
+      }catch(_){return {order:[...defaultSectionOrder],expanded:{...defaultExpanded}};}
+    }
+    let layoutPrefs=loadLayoutPrefs();
+    function saveLayoutPrefs(){
+      try{localStorage.setItem(settingsStorageKey,JSON.stringify(layoutPrefs));$('settingsSaveStatus').textContent='Organización guardada en este navegador.';}
+      catch(_){$('settingsSaveStatus').textContent='El navegador no permite guardar preferencias; los cambios se conservarán durante esta sesión.';}
+    }
+    function updateExpandButton(id){
+      const isOpen=!!layoutPrefs.expanded[id];
+      const panel=$(id),body=$('body-'+id),button=panel.querySelector('[data-toggle-section]');
+      body.hidden=!isOpen;
+      panel.dataset.collapsed=String(!isOpen);
+      button.setAttribute('aria-expanded',String(isOpen));
+      button.setAttribute('aria-label',`${isOpen?'Contraer':'Expandir'} ${sectionDefs.find(s=>s.id===id).label}`);
+      button.querySelector('.toggle-label').textContent=isOpen?'Contraer':'Expandir';
+    }
+    function applyLayout(){
+      const container=$('sectionsContainer');
+      layoutPrefs.order.forEach(id=>container.appendChild($(id)));
+      sectionDefs.forEach(s=>updateExpandButton(s.id));
+      drawSettingsOrder();
+    }
+    function setSectionExpanded(id,isOpen){
+      if(!defaultSectionOrder.includes(id))return;
+      layoutPrefs.expanded[id]=isOpen;
+      updateExpandButton(id);
+      saveLayoutPrefs();
+      // Redibujar permite mantener correcta la vista de la hoja tras abrirla.
+      if(current&&id==='imageSection'&&isOpen)drawSheet(new Date());
+    }
+    function drawSettingsOrder(){
+      const list=$('sectionOrderList');list.replaceChildren();
+      layoutPrefs.order.forEach((id,pos)=>{
+        const def=sectionDefs.find(s=>s.id===id);
+        const row=make('div','settings-row');
+        row.append(make('span','settings-row-name',def.label));
+        const controls=make('div','settings-order-actions');
+        for(const [direction,mark,label] of [[-1,'↑','Subir'],[1,'↓','Bajar']]){
+          const button=make('button','secondary',mark);button.type='button';button.disabled=direction<0?pos===0:pos===layoutPrefs.order.length-1;
+          button.setAttribute('aria-label',`${label} ${def.label}`);
+          button.dataset.moveSection=id;button.dataset.moveDirection=String(direction);
+          button.addEventListener('click',()=>{
+            moveSection(id,direction);
+            const match=Array.from($('sectionOrderList').querySelectorAll('[data-move-section]')).find(b=>b.dataset.moveSection===id&&b.dataset.moveDirection===String(direction));
+            if(match&&!match.disabled)match.focus();
+          });
+          controls.append(button);
+        }
+        row.append(controls);list.append(row);
+      });
+    }
+    function moveSection(id,direction){
+      const from=layoutPrefs.order.indexOf(id),to=from+direction;
+      if(from<0||to<0||to>=layoutPrefs.order.length)return;
+      layoutPrefs.order.splice(from,1);
+      layoutPrefs.order.splice(to,0,id);
+      applyLayout();saveLayoutPrefs();
+    }
+    function toggleSettings(force){
+      const panel=$('settingsSection');
+      const open=typeof force==='boolean'?force:panel.hidden;
+      panel.hidden=!open;
+      $('settingsBtn').setAttribute('aria-expanded',String(open));
+      if(open){drawSettingsOrder();panel.scrollIntoView({behavior:'smooth',block:'start'});}
+    }
+    applyLayout();
+    for(const button of document.querySelectorAll('[data-toggle-section]')){
+      button.addEventListener('click',()=>{
+        const id=button.dataset.toggleSection;
+        setSectionExpanded(id,!layoutPrefs.expanded[id]);
+      });
+    }
+    $('settingsBtn').addEventListener('click',()=>toggleSettings());
+    $('closeSettingsBtn').addEventListener('click',()=>toggleSettings(false));
+    $('quickUploadBtn').addEventListener('click',()=>fileInput.click());
+    $('expandAllBtn').addEventListener('click',()=>{sectionDefs.forEach(s=>layoutPrefs.expanded[s.id]=true);applyLayout();saveLayoutPrefs();if(current)drawSheet(new Date());});
+    $('collapseAllBtn').addEventListener('click',()=>{sectionDefs.forEach(s=>layoutPrefs.expanded[s.id]=false);applyLayout();saveLayoutPrefs();});
+    $('resetLayoutBtn').addEventListener('click',()=>{layoutPrefs={order:[...defaultSectionOrder],expanded:{...defaultExpanded}};applyLayout();saveLayoutPrefs();});
+
     function showError(message){$('errorBox').textContent=message;$('errorBox').hidden=false;$('successBox').hidden=true;}
     function clearAlerts(){for(const id of ['errorBox','warningBox','successBox']){$(id).hidden=true;$(id).textContent='';}}
 
@@ -525,6 +682,7 @@
         current=parsed;lastFileName=file.name;
         $('fileStatus').textContent=`Archivo: ${lastFileName} · ${parsed.agents.length} ejecutivos`;
         $('selectionSection').hidden=false;$('imageSection').hidden=false;$('resultSection').hidden=false;$('previewSection').hidden=false;$('sticky').hidden=false;
+        $('resultsPlaceholder').hidden=true;$('resultsData').hidden=false;
         renderSelection();
         $('successBox').textContent='Reporte cargado. Todos los ejecutivos están incluidos por defecto. Puedes desmarcarlos antes de compartir el JPEG o copiar el reporte.';
         $('successBox').hidden=false;
